@@ -9,6 +9,11 @@ namespace ImanSoftware.DepLens.Core.Implementation;
 
 internal sealed class DirectoryScannerService : IDirectoryScanner
 {
+    private static readonly HashSet<string> ExcludedDirectoryNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "bin", "obj", ".git", ".vs", ".idea", "node_modules"
+    };
+
     private readonly IFileStorage _fileStorage;
     private readonly ImmutableArray<string> patterns;
 
@@ -31,6 +36,8 @@ internal sealed class DirectoryScannerService : IDirectoryScanner
         var discovered = new List<DiscoveredFile>();
         foreach (var item in searchOutCome.Data)
         {
+            if (IsInExcludedDirectory(path, item.FullPath)) continue;
+
             var fileType = DetermineFileType(item);
             if (fileType is FileType.None) continue;
 
@@ -47,6 +54,16 @@ internal sealed class DirectoryScannerService : IDirectoryScanner
         }
 
         return Outcome.Successful(discovered);
+    }
+
+    private static bool IsInExcludedDirectory(string root, string filePath)
+    {
+        // Only directories below the requested root are excluded, not its ancestors.
+        var relativeDirectory = Path.GetDirectoryName(Path.GetRelativePath(root, filePath));
+        if (string.IsNullOrEmpty(relativeDirectory)) return false;
+
+        return relativeDirectory.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            .Any(ExcludedDirectoryNames.Contains);
     }
 
     private async Task<Outcome<string>> ReadFileContent(string path)

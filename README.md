@@ -100,6 +100,7 @@ Every stage is a small, separate service, so each is easy to read, change, or re
 
 A few behaviors worth knowing:
 
+- **Generated and tool files are excluded.** Files below `bin`, `obj`, `.git`, `.vs`, `.idea`, and `node_modules` within the scan root are not read or analyzed. Directory names are matched case-insensitively; similarly named directories and the scan root's ancestors are unaffected. Directory enumeration still visits those folders.
 - **Central versions are per project, not per solution.** Like MSBuild, DepLens uses the *nearest* `Directory.Packages.props` above each project. A project opts out with `<ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>`.
 - **Renamed project files are tolerated.** If a `ProjectReference` or solution entry points to a `.csproj` that no longer exists by that name, but the target folder contains exactly one discovered project, DepLens resolves to it.
 
